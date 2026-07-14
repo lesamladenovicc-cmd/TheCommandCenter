@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(dataviz)",
+      "Read(//c/Users/lesam/AppData/Local/Temp/claude/bundled-skills/2.1.207/6de30ea809a2324a3323e313889aacdf/dataviz/**)",
+      "Bash(node scripts/validate_palette.js \"#3987e5,#199e70,#c98500,#008300\" --mode dark)",
+      "Bash(node scripts/validate_palette.js \"#2a78d6,#1baf7a,#eda100,#008300\" --mode light)",
+      "Read(//c/Users/lesam/.claude/jobs/e76a02f1/tmp/**)",
+      "Bash(cat part1.html part2.html part3.html part4.html part5.html)",
+      "Bash(node -e ' *)",
+      "Bash(node --check app.js)",
+      "Bash(node *)"
+    ]
+  }
+}
