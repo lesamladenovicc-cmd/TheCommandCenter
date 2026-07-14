@@ -9,7 +9,9 @@
       "Bash(cat part1.html part2.html part3.html part4.html part5.html)",
       "Bash(node -e ' *)",
       "Bash(node --check app.js)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(python -m http.server 8613)",
+      "Skill(claude-in-chrome)"
     ]
   }
 }
