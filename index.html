@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
-  CHANGED: Rebuilt as one calm column — big revenue-vs-$10k bar + streak up top, a "Today" action zone (main thing, 5 non-negotiables, outreach +1), then a slim at-a-glance strip. One accent color, larger type, lots of air.
-  MOVED:   Money, pipeline kanban, content log, mind & body, 12-month map and weekly review now live in collapsible sections (open on every load, one click to fold away). Charts cut from five to two: monthly revenue (inside Money) and weekly outreach (inside Weekly Review).
-  DATA:    Same localStorage key + schema (commandCenter.v1) — existing data, backups and import/export all still work. Streak now requires all 5 non-negotiables checked ("Read/learn" retired from the UI; old saved checks are harmless).
+  CHANGED:  Demo/mock data removed. Seeds with the real "AI Front Desk — London Beauty & Grooming" pipeline: 30 leads, EUR pricing (€550 one-time setup + first month, then €150/mo recurring). Currency across the app is €.
+  PIPELINE: Stages simplified to Leads → Contacted → In Talks → Closed. Cards carry WhatsApp, Instagram and monthly value; the edit modal exposes all of them.
+  DATA:     Storage key bumped to commandCenter.v2 so the real seed loads fresh; the old v1 mock data is deleted on first load.
 -->
 <html lang="en" data-theme="dark">
 <head>
@@ -250,7 +250,7 @@ textarea.in{width:100%;resize:vertical;min-height:68px;line-height:1.5}
   background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 9px;white-space:nowrap;cursor:pointer}
 
 /* kanban */
-.kanban{display:grid;grid-template-columns:repeat(6,minmax(178px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px;margin-top:6px}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(178px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px;margin-top:6px}
 .kcol{background:var(--surface-2);border:1px dashed transparent;border-radius:12px;padding:10px;min-height:150px;
   display:flex;flex-direction:column;transition:border-color .15s, background .15s}
 .kcol.dragover{border-color:var(--border-strong);background:var(--surface-3)}
@@ -267,8 +267,9 @@ textarea.in{width:100%;resize:vertical;min-height:68px;line-height:1.5}
 .kcard:active{cursor:grabbing}
 .kcard.dragging{opacity:.45;transform:rotate(1.5deg)}
 .kcard-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
-.kcard-proj{font-size:12px;color:var(--muted);margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kcard-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.kcard-proj{font-size:12px;color:var(--muted);margin-bottom:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kcard-contact{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kcard-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}
 .kcard-price{font-size:11.5px;font-weight:600;color:var(--ink);background:var(--surface-2);
   border-radius:6px;padding:2px 7px;font-variant-numeric:tabular-nums}
 .kcard-note-flag{font-size:11px;color:var(--muted)}
@@ -362,7 +363,7 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
   .glance{grid-template-columns:1fr;padding:6px 0}
   .g-item{border-left:0;border-top:1px solid var(--border);padding:12px 20px}
   .g-item:first-child{border-top:0}
-  .kanban{grid-template-columns:repeat(6,minmax(200px,240px))}
+  .kanban{grid-template-columns:repeat(4,minmax(200px,240px))}
   .bigplus{width:84px;height:64px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -384,7 +385,7 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
           <button id="exportBtn">Export JSON backup</button>
           <button id="importBtn">Import JSON backup</button>
           <hr>
-          <button id="demoBtn">Load demo data</button>
+          <button id="demoBtn">Restore starting pipeline</button>
           <button id="resetBtn" class="danger">Reset to empty</button>
         </div>
       </details>
@@ -396,12 +397,12 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
   <section class="hero" aria-label="Revenue vs goal">
     <div class="hero-grid">
       <div class="hero-main">
-        <div class="overline" id="heroOverline">Revenue — goal $10,000 / month</div>
+        <div class="overline" id="heroOverline">Revenue — goal €10,000 / month</div>
         <div class="hero-number">
           <span class="big-number" id="revBig">$0</span>
           <span class="pct" id="revPct">0%</span>
         </div>
-        <div class="meter" role="progressbar" aria-label="Revenue vs $10,000 goal" aria-valuemin="0" aria-valuemax="100" id="meterBar">
+        <div class="meter" role="progressbar" aria-label="Revenue vs €10,000 goal" aria-valuemin="0" aria-valuemax="100" id="meterBar">
           <div class="meter-fill" id="meterFill"></div>
         </div>
         <div class="pace" id="paceLine"></div>
@@ -477,7 +478,7 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
 
         <div class="subhead">Log revenue</div>
         <form class="frm" id="revForm">
-          <input class="in" id="revAmount" type="number" min="1" step="1" placeholder="$ amount" required>
+          <input class="in" id="revAmount" type="number" min="1" step="1" placeholder="€ amount" required>
           <select class="in" id="revStream">
             <option value="builds">Builds</option>
             <option value="retainers">Retainers</option>
@@ -494,7 +495,7 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
         <ul class="rowlist" id="retList"></ul>
         <form class="frm" id="retForm" style="margin-top:8px">
           <input class="in wide" id="retClient" type="text" placeholder="Client name" required>
-          <input class="in" id="retAmount" type="number" min="1" step="1" placeholder="$ / month" required>
+          <input class="in" id="retAmount" type="number" min="1" step="1" placeholder="€ / month" required>
           <button class="btn btn-sm" type="submit">Add retainer</button>
         </form>
       </div></div></div>
@@ -508,7 +509,7 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
         <svg class="chev" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <div class="fold-body" id="fb-pipe"><div class="fold-clip"><div class="fold-inner">
-        <p class="g-sub" style="margin:4px 0 0">Drag cards between stages · click a card to edit · on mobile, edit a card to move it</p>
+        <p class="g-sub" style="margin:4px 0 0">AI Front Desk — €550 one-time (setup + first month), then €150/mo · drag cards between stages · click a card to edit</p>
         <div class="kanban" id="kanban"></div>
       </div></div></div>
     </section>
@@ -635,19 +636,25 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
     <div class="mfields">
       <div><label for="cf_name">Client / lead name</label>
         <input class="in" id="cf_name" type="text" required style="width:100%"></div>
-      <div><label for="cf_project">Project</label>
-        <input class="in" id="cf_project" type="text" placeholder="Website, AI automation…" style="width:100%"></div>
+      <div><label for="cf_project">Niche &amp; location</label>
+        <input class="in" id="cf_project" type="text" placeholder="Nail Salon · Marylebone, London" style="width:100%"></div>
       <div class="mrow">
-        <div><label for="cf_price">Price ($)</label>
+        <div><label for="cf_wa">WhatsApp</label>
+          <input class="in" id="cf_wa" type="text" placeholder="+44 7…"></div>
+        <div><label for="cf_ig">Instagram</label>
+          <input class="in" id="cf_ig" type="text" placeholder="@handle"></div>
+      </div>
+      <div class="mrow">
+        <div><label for="cf_price">Setup (€)</label>
           <input class="in" id="cf_price" type="number" min="0" step="1"></div>
+        <div><label for="cf_monthly">Monthly (€)</label>
+          <input class="in" id="cf_monthly" type="number" min="0" step="1"></div>
         <div><label for="cf_stage">Stage</label>
           <select class="in" id="cf_stage">
-            <option value="lead">Lead</option>
+            <option value="lead">Leads</option>
             <option value="contacted">Contacted</option>
             <option value="talks">In Talks</option>
-            <option value="building">Building</option>
-            <option value="delivered">Delivered</option>
-            <option value="retainer">Retainer</option>
+            <option value="closed">Closed</option>
           </select></div>
       </div>
       <div><label for="cf_notes">Notes</label>
@@ -675,7 +682,7 @@ footer .tag{margin-top:8px;letter-spacing:.22em;text-transform:uppercase;font-si
    ================================================================ */
 
 /* ============ 1. CONSTANTS ============ */
-const LS_KEY = 'commandCenter.v1';
+const LS_KEY = 'commandCenter.v2';   // v1 held mock data — removed on first v2 load
 const GOAL_MRR = 10000;
 const OUTREACH_TARGET = 10;
 const POSTS_TARGET = 3;            // posts per week
@@ -694,12 +701,10 @@ const STREAMS = { builds:'Builds', retainers:'Retainers', digital:'Digital produ
 /* stream → categorical slot (fixed order, CVD-validated set) */
 const STREAM_VARS = { builds:'--s1', retainers:'--s2', digital:'--s3', other:'--s4' };
 const STAGES = [
-  { k:'lead',      label:'Lead',      short:'Leads' },
+  { k:'lead',      label:'Leads',     short:'Leads' },
   { k:'contacted', label:'Contacted', short:'Contacted' },
   { k:'talks',     label:'In Talks',  short:'Talks' },
-  { k:'building',  label:'Building',  short:'Building' },
-  { k:'delivered', label:'Delivered', short:'Delivered' },
-  { k:'retainer',  label:'Retainer',  short:'Retainers' },
+  { k:'closed',    label:'Closed',    short:'Closed' },
 ];
 const PILLARS = { build:'Build-in-public', self:'Self-improvement', teach:'Teach', story:'Story' };
 const PLATFORMS = { x:'X', ig:'Instagram' };
@@ -757,7 +762,7 @@ function lastSundayISO(weeksBack){
   dt.setDate(dt.getDate() - back - weeksBack*7);
   return iso(dt);
 }
-function fmtMoney(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtMoney(n){ return '€' + Math.round(n).toLocaleString('en-US'); }
 function fmtDayShort(isoStr){
   const [y,m,d] = isoStr.split('-').map(Number);
   return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday:'short' });
@@ -797,7 +802,7 @@ function baseState(){
     mainThing: { date:'', text:'' },
     revenue: [],      // { id, date, stream, amount, note }
     retainers: [],    // { id, client, amount, active }
-    pipeline: [],     // { id, name, project, price, notes, stage }
+    pipeline: [],     // { id, name, project, whatsapp, instagram, price, monthly, notes, stage }
     outreach: {},     // 'YYYY-MM-DD' → count
     habits: {},       // 'YYYY-MM-DD' → ['deep', ...]
     posts: [],        // { id, date, platform, pillar, title }
@@ -812,15 +817,15 @@ function defaultMilestones(){
     'First paying client',
     'Portfolio live + 3 case studies',
     'First retainer signed',
-    '$1,000 / mo recurring',
+    '€1,000 / mo recurring',
     'Productized offer: fixed-scope AI build',
-    '$2,500 / mo — raise prices',
+    '€2,500 / mo — raise prices',
     '1,000 followers — brand compounding',
-    '$4,000 / mo + first digital product sale',
+    '€4,000 / mo + first digital product sale',
     'Delivery systemized (templates + subcontractor)',
-    '$6,000 / mo — referral engine running',
-    '$8,000 / mo — retainers are majority',
-    '$10,000 / mo — Command Center complete',
+    '€6,000 / mo — referral engine running',
+    '€8,000 / mo — retainers are majority',
+    '€10,000 / mo — Command Center complete',
   ];
   return titles.map((t,i) => ({ id:'ms'+(i+1), month:i+1, title:t, done:false }));
 }
@@ -832,114 +837,57 @@ function load(){
       if (data && typeof data === 'object' && Array.isArray(data.retainers)) return data;
     }
   } catch(e){ console.warn('Command Center: could not read saved data', e); }
+  localStorage.removeItem('commandCenter.v1');   // clear out the old mock data
   const seeded = seedState();
   localStorage.setItem(LS_KEY, JSON.stringify(seeded));
   return seeded;
 }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(S)); }
 
-/* Realistic demo data, generated relative to today so it always looks current. */
+/* Real pipeline — "AI Front Desk", London beauty & grooming.
+   Deal: €550 one-time (setup + first month), then €150/mo recurring.
+   Everything else (revenue, retainers, posts, habits…) starts empty. */
 function seedState(){
   const s = baseState();
-  const T = todayISO();
-  const d = n => addDaysISO(T, -n);
-
-  s.mainThing = { date:T, text:'Send Peak Realty the revised proposal' };
-
-  // Retainers → MRR $2,400
-  s.retainers = [
-    { id:uid(), client:'Nordic Web Co',  amount:1200, active:true },
-    { id:uid(), client:'Apex Fitness',   amount:750,  active:true },
-    { id:uid(), client:'Café Lumen',     amount:450,  active:true },
-  ];
-
-  // Revenue history: retainers ramp in over the last 3 months, builds + digital on top
-  s.revenue = [
-    { id:uid(), date:midMonthISO(5,14), stream:'builds',    amount:800,  note:'Landing page — local gym' },
-    { id:uid(), date:midMonthISO(4,9),  stream:'builds',    amount:1200, note:'Site refresh — dental clinic' },
-    { id:uid(), date:midMonthISO(4,21), stream:'digital',   amount:90,   note:'Notion template pack' },
-    { id:uid(), date:midMonthISO(3,1),  stream:'retainers', amount:450,  note:'Café Lumen — monthly' },
-    { id:uid(), date:midMonthISO(3,11), stream:'builds',    amount:1500, note:'AI intake bot — law office' },
-    { id:uid(), date:midMonthISO(3,24), stream:'digital',   amount:140,  note:'Template pack' },
-    { id:uid(), date:midMonthISO(2,1),  stream:'retainers', amount:450,  note:'Café Lumen — monthly' },
-    { id:uid(), date:midMonthISO(2,1),  stream:'retainers', amount:1200, note:'Nordic Web Co — monthly' },
-    { id:uid(), date:midMonthISO(2,15), stream:'builds',    amount:1800, note:'Site + booking — physio' },
-    { id:uid(), date:midMonthISO(2,26), stream:'digital',   amount:180,  note:'Template pack' },
-    { id:uid(), date:midMonthISO(1,1),  stream:'retainers', amount:450,  note:'Café Lumen — monthly' },
-    { id:uid(), date:midMonthISO(1,1),  stream:'retainers', amount:1200, note:'Nordic Web Co — monthly' },
-    { id:uid(), date:midMonthISO(1,1),  stream:'retainers', amount:750,  note:'Apex Fitness — monthly' },
-    { id:uid(), date:midMonthISO(1,17), stream:'builds',    amount:2000, note:'Apex Fitness rebuild' },
-    { id:uid(), date:midMonthISO(1,25), stream:'digital',   amount:220,  note:'Template pack' },
-    { id:uid(), date:midMonthISO(0,1),  stream:'retainers', amount:450,  note:'Café Lumen — monthly' },
-    { id:uid(), date:midMonthISO(0,1),  stream:'retainers', amount:1200, note:'Nordic Web Co — monthly' },
-    { id:uid(), date:midMonthISO(0,1),  stream:'retainers', amount:750,  note:'Apex Fitness — monthly' },
-    { id:uid(), date:midMonthISO(0,8),  stream:'digital',   amount:120,  note:'Template pack' },
-  ];
+  const P = (name, project, whatsapp, instagram, stage, notes) =>
+    ({ id:uid(), name, project, whatsapp, instagram, price:550, monthly:150, notes, stage });
 
   s.pipeline = [
-    { id:uid(), name:'Luna Yoga Studio',       project:'Website refresh',       price:900,  notes:'Found via IG — DM opened',          stage:'lead' },
-    { id:uid(), name:'Bright Dental',          project:'AI intake bot',         price:1500, notes:'',                                   stage:'lead' },
-    { id:uid(), name:'GreenScape Landscaping', project:'Site + booking flow',   price:1200, notes:'Emailed Tue — no reply yet',         stage:'contacted' },
-    { id:uid(), name:'Peak Realty',            project:'Site + AI chatbot',     price:2400, notes:'Proposal sent — follow up Thursday', stage:'talks' },
-    { id:uid(), name:'Café Lumen',             project:'Booking automation',    price:1800, notes:'Deliver by end of next week',        stage:'building' },
-    { id:uid(), name:'Apex Fitness',           project:'Website rebuild',       price:2000, notes:'Delivered — ask for testimonial',    stage:'delivered' },
-    { id:uid(), name:'Nordic Web Co',          project:'Care plan + AI upkeep', price:1200, notes:'$1,200/mo since spring',             stage:'retainer' },
-    { id:uid(), name:'Apex Fitness',           project:'Automations retainer',  price:750,  notes:'$750/mo',                            stage:'retainer' },
+    P('Somewhere in Queens Park',        'Hair, Nails & Skin Salon · Queens Park, London',        '+44 7784 156801',          '@somewhereinqp',            'contacted', 'Contacted Jul 13 — delivered, auto-reply received (business away-message bot)'),
+    P('House of Hair UK',                'Hair Extensions Salon · Shepherd\'s Bush, London W12',  '+44 7985 141859',          '@houseofhairuk',            'contacted', 'Contacted Jul 13 — delivered, auto-reply received'),
+    P('Rebecca Emily Hair',              'Hair Salon · London',                                   '+44 7587 475113',          'via @wioletahairstudio',    'contacted', 'Contacted Jul 13 — sent, single tick only, not yet delivered'),
+    P('Keiko UK Hair & Beauty',          'Hair & Beauty Salon · Covent Garden, London',           '+44 7947 739933',          '@ticro_uk',                 'contacted', 'Contacted Jul 13 — delivered, auto-reply received (WhatsApp profile shows as "The Royal Salon London")'),
+    P('Na.Ko Hair London',               'Hair Salon · London',                                   '+44 7957 445105',          '@londonhairathome',         'contacted', 'Contacted Jul 13 — delivered, no reply yet'),
+    P('AUBE Hair London Maddox',         'Hair Salon · Mayfair, London W1S',                      '+44 7513 316441',          '@aubehairlondon',           'contacted', 'Contacted Jul 13 — delivered, no reply yet'),
+    P('Beauty Post Nail Salon',          'Nail Salon · Blackheath, London SE13',                  '+44 7555 523661',          '@postbeautynails',          'contacted', 'Contacted Jul 14 — delivered, no reply yet'),
+    P('Niamo Nails',                     'Nail Salon · Paddington, London',                       '+44 7526 22222 (verify)',  '@inpaddington',             'lead',      'Skipped — number is one digit short, verify on Instagram before texting'),
+    P('SOAK LDN',                        'Nail Salon (2 locations) · Wandsworth/Fulham, London',  '+44 7822 010248',          '@soak_.ldn',                'contacted', 'Contacted Jul 14 — delivered, auto-reply received'),
+    P('Nail Edit London (We Nail It)',   'Nail Studio · Marylebone, London',                      '+44 7920 348624',          '@wenaildit',                'contacted', 'Contacted Jul 14 — delivered, auto-reply received'),
+    P('London Lash Studio',              'Lash Studio · London',                                  '+44 7783 657732',          '@hehebeautybar',            'contacted', 'Contacted Jul 14 — sent, no reply yet'),
+    P('Eyeasy Lash Studio',              'Lash Studio · Sutton, London SM1',                      '+44 7517 984929',          '@eyeasy.lashstudio',        'contacted', 'Contacted Jul 14 — sent, no reply yet'),
+    P('Blanco Lash Studio',              'Lash Studio · London',                                  '+44 7518 276897',          '@perfectlasheslondon__uk',  'lead',      'Not yet contacted'),
+    P('KJ Cosmetics UK',                 'Lash Studio · West London',                             '+44 7930 933074',          '@kjcosmeticsuk',            'lead',      'Not yet contacted'),
+    P('Pro Beauty Studio',               'PMU & Lash Studio · Canary Wharf, London E14',          '+44 7944 454755',          '@pro_beauty_london',        'lead',      'Not yet contacted'),
+    P('Naild London',                    'Lash Studio · London',                                  '+44 7405 037497',          '@naild.london',             'lead',      'Not yet contacted'),
+    P('Yahoo Barber1',                   'Mobile Barber · London-wide',                           '+44 7432 206043',          '@yahoobarber1',             'lead',      'Not yet contacted'),
+    P('Nhyiraba Haircut',                'Barber · East/Central London',                          '+44 7903 467175',          '@nhyiraba_haircut',         'lead',      'Not yet contacted'),
+    P('Selina Bassi Makeup',             'Makeup Artist · London',                                '+44 7459 025066',          '@selinabassi',              'lead',      'Not yet contacted'),
+    P('Mendes Makeup',                   'Makeup Artist · London',                                '+44 7507 549348',          '@mendesmakeupp',            'lead',      'Not yet contacted'),
+    P('Dorota — London Makeup and Hair', 'Makeup & Hair Artist · North West London',              '+44 7449 560010',          '@londonmakeupartist.uk',    'lead',      'Not yet contacted'),
+    P('Under The Cloud Brows',           'Microblading & Brows Studio · Shepherd\'s Bush, London W6', '+44 7743 946810',      '@utcbrows',                 'lead',      'Not yet contacted'),
+    P('Nano Microblading London',        'Microblading Studio · London',                          '+44 7899 994647',          '@nanomicroblading_london',  'lead',      'Not yet contacted'),
+    P('Sora PMU',                        'Microblading / PMU · London',                           '+44 7704 160499',          '@sora.pmu',                 'lead',      'Not yet contacted'),
+    P('Laura Kate Artistry',             'Microblading Artist · London',                          '+44 7454 554861',          '@laurakateartistry',        'lead',      'Not yet contacted'),
+    P('Mada Ama Beauty',                 'Brow Lamination & Lash Lift · London',                  '+44 7466 688209',          '@mada.ama.beauty',          'lead',      'Not yet contacted'),
+    P('Fulham Tattoo',                   'Tattoo Studio · Fulham, London',                        '+44 7701 515314 (verify)', '@fulhamtattoo',             'lead',      'Not yet contacted — number conflicts across posts, verify before texting'),
+    P('Rohan Tattoo Studio',             'Tattoo Studio · Leicester',                             '+44 7469 194555',          '@rohantattoostudioleicester','lead',     'Not yet contacted'),
+    P('Hair by HK',                      'Bridal Hair & Mehndi Artist · London',                  '+44 7756 936010',          '@hair.byhk',                'lead',      'Not yet contacted'),
+    P('Gul Taskin PMU',                  'Permanent Makeup Artist · London',                      '+44 7503 320276',          '@gul.taskinn',              'lead',      'Not yet contacted'),
   ];
 
-  // Outreach: last 7 days (today intentionally mid-flight)
-  [[6,10],[5,12],[4,7],[3,10],[2,4],[1,11],[0,4]].forEach(([back,n]) => { s.outreach[d(back)] = n; });
-
-  // Habits: a believable 6-day all-5 streak, a lighter day 7 back, today just started
-  s.habits[d(7)] = ['deep','move'];
-  for (let i = 1; i <= 6; i++) s.habits[d(i)] = ['deep','outreach','content','move','rest'];
-  s.habits[d(0)] = ['deep'];
-
-  // Posts: 2 so far this week, full weeks before
-  const wk = weekStartISO(T);
-  s.posts = [
-    { id:uid(), date:wk,                platform:'x',  pillar:'build', title:'Client dashboard build — day 1' },
-    { id:uid(), date:addDaysISO(wk,1),  platform:'ig', pillar:'self',  title:'The morning routine that protects deep work' },
-    { id:uid(), date:addDaysISO(wk,-6), platform:'x',  pillar:'teach', title:'3 automations every local business needs' },
-    { id:uid(), date:addDaysISO(wk,-4), platform:'x',  pillar:'build', title:'Booking bot demo — 42s' },
-    { id:uid(), date:addDaysISO(wk,-2), platform:'ig', pillar:'story', title:'Month 5 recap: $4.6k, mostly boring work' },
-    { id:uid(), date:addDaysISO(wk,-13),platform:'x',  pillar:'teach', title:'Why retainers beat one-off builds' },
-    { id:uid(), date:addDaysISO(wk,-11),platform:'ig', pillar:'self',  title:'Training log — consistency over intensity' },
-    { id:uid(), date:addDaysISO(wk,-9), platform:'x',  pillar:'build', title:'Shipping the café booking flow' },
-  ];
-
-  // Follower snapshots: weekly, trending up
-  const fx = [210,235,255,290,320,365,410,455];
-  const fg = [340,355,380,410,450,490,540,585];
-  fx.forEach((v,i) => s.followers.push({ date:d((fx.length-1-i)*7), x:v, ig:fg[i] }));
-
-  // Wellness: last 7 days, one clear rest day, today filled in this morning
-  const wl = [
-    [6,{sleep:7,  energy:4, mood:4, workout:true }],
-    [5,{sleep:6.5,energy:3, mood:3, workout:true }],
-    [4,{sleep:8,  energy:4, mood:4, workout:false}],
-    [3,{sleep:7.5,energy:5, mood:4, workout:true }],
-    [2,{sleep:6,  energy:3, mood:3, workout:false}],
-    [1,{sleep:7,  energy:4, mood:4, workout:true }],
-    [0,{sleep:7.5,energy:4, mood:4, workout:false}],
-  ];
-  wl.forEach(([back,v]) => { s.wellness[d(back)] = v; });
-
-  s.milestones = defaultMilestones();
-  s.milestones[0].done = true;
-  s.milestones[1].done = true;
-  s.milestones[2].done = true;
-
-  s.reviews = [
-    { id:uid(), date:lastSundayISO(0),
-      worked:'Shipped the Café Lumen booking flow in three deep-work blocks. Outreach hit 10/day four days out of five and produced the Peak Realty call.',
-      didnt:'Posted only twice — content always loses to client work after 2pm. Slept under 7h twice.',
-      focus:'Close Peak Realty. Content gets the FIRST 30 minutes of the day, not the last.' },
-    { id:uid(), date:lastSundayISO(1),
-      worked:'Apex rebuild delivered early; they upgraded to the $750/mo automations retainer. Streak intact all week.',
-      didnt:'Said yes to a scope change for free. No rest day until forced.',
-      focus:'Price every change order. Schedule the rest day on Monday, not “when tired”.' },
-  ];
+  // Outreach already done: 6 messages sent Jul 13, 5 sent Jul 14
+  s.outreach['2026-07-13'] = 6;
+  s.outreach['2026-07-14'] = 5;
 
   return s;
 }
@@ -1143,6 +1091,9 @@ function renderPipeline(){
     ? `${S.pipeline.length} deal${S.pipeline.length === 1 ? '' : 's'}`
     : 'empty';
 
+  // safety net: cards from old backups with retired stages land in Leads
+  S.pipeline.forEach(c => { if (!STAGES.some(st => st.k === c.stage)) c.stage = 'lead'; });
+
   const board = $('#kanban');
   board.innerHTML = STAGES.map(st => {
     const cards = S.pipeline.filter(c => c.stage === st.k);
@@ -1158,8 +1109,9 @@ function renderPipeline(){
         <div class="kcard" draggable="true" data-card="${c.id}">
           <div class="kcard-name">${esc(c.name)}</div>
           ${c.project ? `<div class="kcard-proj">${esc(c.project)}</div>` : ''}
+          ${(c.whatsapp || c.instagram) ? `<div class="kcard-contact">${esc([c.whatsapp, c.instagram].filter(Boolean).join(' · '))}</div>` : ''}
           <div class="kcard-meta">
-            ${c.price ? `<span class="kcard-price">${fmtMoney(c.price)}${st.k === 'retainer' ? '/mo' : ''}</span>` : ''}
+            ${c.price ? `<span class="kcard-price">${fmtMoney(c.price)}${c.monthly ? ' + ' + fmtMoney(c.monthly) + '/mo' : ''}</span>` : ''}
             ${c.notes ? `<span class="kcard-note-flag" title="${esc(c.notes)}">✎ note</span>` : ''}
           </div>
         </div>`).join('')}
@@ -1200,21 +1152,27 @@ function openCardModal(id, stage){
   $('#modalTitle').textContent = card ? 'Edit card' : 'New card';
   $('#cf_id').value      = card ? card.id : '';
   $('#cf_name').value    = card ? card.name : '';
-  $('#cf_project').value = card ? card.project : '';
+  $('#cf_project').value = card ? (card.project || '') : '';
+  $('#cf_wa').value      = card ? (card.whatsapp || '') : '';
+  $('#cf_ig').value      = card ? (card.instagram || '') : '';
   $('#cf_price').value   = card && card.price ? card.price : '';
+  $('#cf_monthly').value = card && card.monthly ? card.monthly : '';
   $('#cf_stage').value   = card ? card.stage : (stage || 'lead');
-  $('#cf_notes').value   = card ? card.notes : '';
+  $('#cf_notes').value   = card ? (card.notes || '') : '';
   $('#deleteCardBtn').style.visibility = card ? 'visible' : 'hidden';
   $('#cardModal').showModal();
 }
 function saveCardFromModal(){
   const id = $('#cf_id').value;
   const data = {
-    name:    $('#cf_name').value.trim(),
-    project: $('#cf_project').value.trim(),
-    price:   +$('#cf_price').value || 0,
-    stage:   $('#cf_stage').value,
-    notes:   $('#cf_notes').value.trim(),
+    name:      $('#cf_name').value.trim(),
+    project:   $('#cf_project').value.trim(),
+    whatsapp:  $('#cf_wa').value.trim(),
+    instagram: $('#cf_ig').value.trim(),
+    price:     +$('#cf_price').value || 0,
+    monthly:   +$('#cf_monthly').value || 0,
+    stage:     $('#cf_stage').value,
+    notes:     $('#cf_notes').value.trim(),
   };
   if (!data.name) return;
   if (id){
@@ -1428,7 +1386,7 @@ function renderCharts(){
         scales: {
           x: { grid: { display: false }, border: { color: c.axis } },
           y: { beginAtZero: true, grid: { color: c.grid, drawTicks: false }, border: { display: false },
-               ticks: { maxTicksLimit: 5, callback: v => v >= 1000 ? '$' + (v/1000) + 'k' : '$' + v } },
+               ticks: { maxTicksLimit: 5, callback: v => v >= 1000 ? '€' + (v/1000) + 'k' : '€' + v } },
         },
       },
     });
@@ -1492,10 +1450,10 @@ function importData(file){
   reader.readAsText(file);
 }
 function loadDemo(){
-  if (!confirm('Replace ALL current data with demo data?')) return;
+  if (!confirm('Replace ALL current data with the starting AI Front Desk pipeline (30 leads)?')) return;
   const th = S.theme;
   S = seedState(); S.theme = th;
-  save(); renderAll(); toast('Demo data loaded');
+  save(); renderAll(); toast('Starting pipeline restored');
 }
 function resetEmpty(){
   if (!confirm('Erase all data and start empty? Export a backup first if unsure.')) return;
